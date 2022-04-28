@@ -187,7 +187,8 @@ while true ; do
     sleep 5
     PASSWORD=$(docker exec -it opensearch-node1 /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p ${PASSWORD})
     docker cp opensearch-node1:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml .
-    sed -i "14s@.*@hash: \"$PASSWORD\"@g" internal_users.yml
+    sed -i '14s@.*@  hash: "'$PASSWORD'"@g' internal_users.yml
+    sed -i 's/\r//' internal_users.yml
     docker cp ./internal_users.yml opensearch-node1:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
     docker cp ./internal_users.yml opensearch-node2:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
     docker exec -it opensearch-node1 plugins/opensearch-security/tools/securityadmin.sh -cd plugins/opensearch-security/securityconfig/ -icl -nhnv -cacert config/root-ca.pem -cert config/kirk.pem -key config/kirk-key.pem
@@ -197,5 +198,4 @@ while true ; do
   sleep 5
 done
 
-sudo -u ec2-user -i /usr/local/bin/docker-compose down
-sudo -u ec2-user -i /usr/local/bin/docker-compose up -d
+sudo -u ec2-user -i /usr/local/bin/docker-compose restart opensearch-node1 opensearch-node2
