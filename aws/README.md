@@ -27,7 +27,13 @@ terraform init
 terraform apply -auto-approve -var="aws_region=$AWS_DEFAULT_REGION"
 ```
 
-Output will provide the URL of the Opensearch Dashboard. After deployment completes, it still takes roughly 5 minutes until you can access the Opensearch Dashboard app.
+Output will provide the URL of the OpenSearch Dashboards. After deployment completes, it still takes roughly 5 minutes until you can access the OpenSearch Dashboards app.
+
+Default credentials for OpenSearch Dashboards are:
+
+- Username: `admin`
+
+- Password: `admin`
 
 ## Teardown
 
