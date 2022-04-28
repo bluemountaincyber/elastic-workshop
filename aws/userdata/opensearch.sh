@@ -183,7 +183,7 @@ chown -R ec2-user:ec2-user /home/ec2-user
 sudo -u ec2-user -i /usr/local/bin/docker-compose up -d
 
 while true ; do 
-  if [[ $(docker exec -it opensearch-node1 id 2>/dev/null) ]]; then 
+  if [[ $(docker exec -it opensearch-node1 cat /usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml 2>/dev/null) ]]; then 
     sleep 30
     PASSWORD=$(docker exec -it opensearch-node1 /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p ${PASSWORD})
     docker cp opensearch-node1:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml .
