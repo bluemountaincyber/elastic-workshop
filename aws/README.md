@@ -26,3 +26,13 @@ cd /home/cloudshell-user/opensearch-workshop/aws
 terraform init
 terraform apply -auto-approve
 ```
+
+Output will provide the URL of the Opensearch Dashboard. After deployment completes, it still takes roughly 5 minutes until you can access the Opensearch Dashboard app.
+
+## Teardown
+
+```bash
+cd /home/cloudshell-user/opensearch-workshop/aws
+terraform destroy -auto-approve
+aws dynamodb delete-table --table-name logstash
+```
