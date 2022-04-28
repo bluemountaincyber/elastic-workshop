@@ -13,6 +13,7 @@ resource "aws_cloudtrail" "os_cloudtrail" {
   include_global_service_events = false
   cloud_watch_logs_group_arn    = "${aws_cloudwatch_log_group.os_cloudtrail.arn}:*"
   cloud_watch_logs_role_arn     = aws_iam_role.cloudtrail_role.arn
+  depends_on                    = [aws_s3_bucket_policy.os_cloudtrail]
 }
 
 resource "aws_kinesis_stream" "os_kinesis_stream" {
