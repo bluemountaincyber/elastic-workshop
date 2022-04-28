@@ -76,7 +76,7 @@ output {
      hosts => ["https://opensearch-node1:9200","https://opensearch-node2:9200"]
      index => "awslogs-%%{+YYYY.MM.dd}"
      user => "admin"
-     password => "admin"
+     password => "${PASSWORD}"
      ssl => true
      ssl_certificate_verification => false
    }
@@ -181,7 +181,21 @@ chown -R ec2-user:ec2-user /home/ec2-user
 
 # Start up Opensearch and reset password
 sudo -u ec2-user -i /usr/local/bin/docker-compose up -d
-sleep 10
-PASSWORD=$(docker exec -it opensearch-node1 /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p ${PASSWORD})
-docker exec -it opensearch-node1 sed -i "14s/.*/  hash: $PASSWORD/g" /usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
-docker exec -it opensearch-node2 sed -i "14s/.*/  hash: $PASSWORD/g" /usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
+
+while true ; do 
+  if [[ $(docker exec -it opensearch-node1 id 2>/dev/null) ]]; then 
+    sleep 5
+    PASSWORD=$(docker exec -it opensearch-node1 /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p ${PASSWORD})
+    docker cp opensearch-node1:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml .
+    sed -i "14s@.*@hash: \"$PASSWORD\"@g" internal_users.yml
+    docker cp ./internal_users.yml opensearch-node1:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
+    docker cp ./internal_users.yml opensearch-node2:/usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
+    docker exec -it opensearch-node1 plugins/opensearch-security/tools/securityadmin.sh -cd plugins/opensearch-security/securityconfig/ -icl -nhnv -cacert config/root-ca.pem -cert config/kirk.pem -key config/kirk-key.pem
+    docker exec -it opensearch-node2 plugins/opensearch-security/tools/securityadmin.sh -cd plugins/opensearch-security/securityconfig/ -icl -nhnv -cacert config/root-ca.pem -cert config/kirk.pem -key config/kirk-key.pem
+    break
+  fi
+  sleep 5
+done
+
+sudo -u ec2-user -i /usr/local/bin/docker-compose down
+sudo -u ec2-user -i /usr/local/bin/docker-compose up -d
