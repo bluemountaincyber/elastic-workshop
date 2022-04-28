@@ -24,7 +24,7 @@ cd /home/cloudshell-user/opensearch-workshop/aws
 
 ```bash
 terraform init
-terraform apply -auto-approve
+terraform apply -auto-approve -var="aws_region=$AWS_DEFAULT_REGION"
 ```
 
 Output will provide the URL of the Opensearch Dashboard. After deployment completes, it still takes roughly 5 minutes until you can access the Opensearch Dashboard app.
@@ -33,6 +33,6 @@ Output will provide the URL of the Opensearch Dashboard. After deployment comple
 
 ```bash
 cd /home/cloudshell-user/opensearch-workshop/aws
-terraform destroy -auto-approve
-aws dynamodb delete-table --table-name logstash
+terraform destroy -auto-approve -var="aws_region=$AWS_DEFAULT_REGION"
+aws dynamodb delete-table --table-name logstash --region $AWS_DEFAULT_REGION
 ```
