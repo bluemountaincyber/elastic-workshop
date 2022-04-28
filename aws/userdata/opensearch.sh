@@ -179,5 +179,9 @@ chown ec2-user:ec2-user /home/ec2-user/docker-compose.yml
 # Adjust permissions
 chown -R ec2-user:ec2-user /home/ec2-user
 
-# Start up Opensearch
+# Start up Opensearch and reset password
 sudo -u ec2-user -i /usr/local/bin/docker-compose up -d
+sleep 10
+PASSWORD=$(docker exec -it opensearch-node1 /usr/share/opensearch/plugins/opensearch-security/tools/hash.sh -p ${PASSWORD})
+docker exec -it opensearch-node1 sed -i "14s/.*/  hash: $PASSWORD/g" /usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml
+docker exec -it opensearch-node2 sed -i "14s/.*/  hash: $PASSWORD/g" /usr/share/opensearch/plugins/opensearch-security/securityconfig/internal_users.yml

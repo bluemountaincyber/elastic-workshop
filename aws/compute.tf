@@ -15,7 +15,7 @@ resource "aws_instance" "opensearch" {
   iam_instance_profile        = aws_iam_instance_profile.os_profile.id
   vpc_security_group_ids      = [aws_security_group.os_http.id]
   subnet_id                   = data.aws_subnet.selected.id
-  user_data                   = templatefile("${path.module}/userdata/opensearch.sh", { REGION = var.aws_region })
+  user_data                   = templatefile("${path.module}/userdata/opensearch.sh", { REGION = var.aws_region, PASSWORD = var.opensearch_password })
 
   root_block_device {
     volume_size = 20

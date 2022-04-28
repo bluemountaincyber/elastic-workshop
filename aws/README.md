@@ -22,14 +22,16 @@ cd /home/cloudshell-user/opensearch-workshop/aws
 
 ## Deploy
 
+Set the password to something strong as this is public-facing by default.
+
 ```bash
 terraform init
-terraform apply -auto-approve -var="aws_region=$AWS_DEFAULT_REGION"
+terraform apply -auto-approve -var="aws_region=$AWS_DEFAULT_REGION" -var="opensearch_password=admin"
 ```
 
 Output will provide the URL of the OpenSearch Dashboards. After deployment completes, it still takes roughly 5 minutes until you can access the OpenSearch Dashboards app.
 
-Default credentials for OpenSearch Dashboards are:
+Default credentials for OpenSearch Dashboards are as follows (unless you changed it during deployment... which is HIGHLY recommended):
 
 - Username: `admin`
 
