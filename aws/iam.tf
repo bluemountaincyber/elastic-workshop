@@ -128,7 +128,7 @@ resource "aws_iam_policy" "victim_policy" {
       {
         Sid      = "S3ListBuckets"
         Effect   = "Allow"
-        Action   = "s3:ListBuckets"
+        Action   = "s3:List*"
         Resource = "*"
       },
       {
