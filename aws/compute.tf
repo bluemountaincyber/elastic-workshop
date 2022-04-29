@@ -8,14 +8,16 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-resource "aws_instance" "opensearch" {
+resource "aws_instance" "elastic" {
   ami                         = data.aws_ami.amazon_linux_2.id
   instance_type               = "t2.medium"
   associate_public_ip_address = true
-  iam_instance_profile        = aws_iam_instance_profile.os_profile.id
-  vpc_security_group_ids      = [aws_security_group.os_http.id]
+  iam_instance_profile        = aws_iam_instance_profile.el_profile.id
+  vpc_security_group_ids      = [aws_security_group.el_http.id]
   subnet_id                   = data.aws_subnet.selected.id
-  user_data                   = templatefile("${path.module}/userdata/opensearch.sh", { REGION = var.aws_region, PASSWORD = var.opensearch_password })
+  user_data = templatefile(
+    "${path.module}/userdata/elastic.sh",
+  { REGION = var.aws_region, PASSWORD = var.elastic_password })
 
   root_block_device {
     volume_size = 20
@@ -29,11 +31,11 @@ resource "aws_instance" "opensearch" {
   }
 
   tags = {
-    Name = "Opensearch"
+    Name = "Elastic"
   }
 
   volume_tags = {
-    Name = "Opensearch"
+    Name = "Elastic"
   }
 }
 

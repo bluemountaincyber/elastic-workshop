@@ -9,8 +9,8 @@ data "aws_subnet" "selected" {
   availability_zone = "${var.aws_region}a"
 }
 
-resource "aws_security_group" "os_http" {
-  name        = "OpensearchHTTP"
+resource "aws_security_group" "el_http" {
+  name        = "ElasticHTTP"
   description = "Allow 9000/tcp inbound traffic"
   vpc_id      = data.aws_vpc.default.id
 
@@ -31,7 +31,7 @@ resource "aws_security_group" "os_http" {
   }
 
   tags = {
-    Name = "OpensearchHTTP"
+    Name = "ElasticHTTP"
   }
 }
 

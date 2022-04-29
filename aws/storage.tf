@@ -15,13 +15,13 @@ resource "aws_s3_object" "sensitive_object" {
   depends_on = [local_file.sensitive_file]
 }
 
-resource "aws_s3_bucket" "os_cloudtrail" {
-  bucket        = "os-cloudtrail-${random_string.suffix.result}"
+resource "aws_s3_bucket" "el_cloudtrail" {
+  bucket        = "el-cloudtrail-${random_string.suffix.result}"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_policy" "os_cloudtrail" {
-  bucket = aws_s3_bucket.os_cloudtrail.id
+resource "aws_s3_bucket_policy" "el_cloudtrail" {
+  bucket = aws_s3_bucket.el_cloudtrail.id
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -32,7 +32,7 @@ resource "aws_s3_bucket_policy" "os_cloudtrail" {
           "Service" : "cloudtrail.amazonaws.com"
         }
         Action   = "s3:GetBucketAcl"
-        Resource = "${aws_s3_bucket.os_cloudtrail.arn}"
+        Resource = "${aws_s3_bucket.el_cloudtrail.arn}"
       },
       {
         Sid    = "AWSCloudTrailWrite"
@@ -41,7 +41,7 @@ resource "aws_s3_bucket_policy" "os_cloudtrail" {
           "Service" : "cloudtrail.amazonaws.com"
         }
         Action   = "s3:PutObject"
-        Resource = "${aws_s3_bucket.os_cloudtrail.arn}/Opensearch/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        Resource = "${aws_s3_bucket.el_cloudtrail.arn}/Elastic/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
         Condition = {
           "StringEquals" : {
             "s3:x-amz-acl" : "bucket-owner-full-control"

@@ -1,5 +1,5 @@
-resource "aws_iam_role" "os_role" {
-  name = "OpensearchRole"
+resource "aws_iam_role" "el_role" {
+  name = "ElasticRole"
   path = "/"
 
   assume_role_policy = jsonencode({
@@ -17,20 +17,20 @@ resource "aws_iam_role" "os_role" {
   })
 }
 
-resource "aws_iam_instance_profile" "os_profile" {
-  name = "OpensearchInstanceProfile"
-  role = aws_iam_role.os_role.name
+resource "aws_iam_instance_profile" "el_profile" {
+  name = "ElasticInstanceProfile"
+  role = aws_iam_role.el_role.name
 }
 
-resource "aws_iam_policy" "os_policy" {
-  name        = "OpensearchKinesisPolicy"
+resource "aws_iam_policy" "el_policy" {
+  name        = "ElasticKinesisPolicy"
   path        = "/"
-  description = "Opensearch Kinesis Setup"
+  description = "Elastic Kinesis Setup"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "OpensearchKinesisSetup"
+        Sid    = "ElasticKinesisSetup"
         Effect = "Allow"
         Action = [
           "cloudwatch:PutMetricData",
@@ -89,9 +89,9 @@ resource "aws_iam_policy" "os_policy" {
   })
 }
 
-resource "aws_iam_role_policy_attachment" "os_policy_attachment" {
-  role       = aws_iam_role.os_role.name
-  policy_arn = aws_iam_policy.os_policy.arn
+resource "aws_iam_role_policy_attachment" "el_policy_attachment" {
+  role       = aws_iam_role.el_role.name
+  policy_arn = aws_iam_policy.el_policy.arn
 }
 
 resource "aws_iam_role" "victim_role" {
@@ -186,7 +186,7 @@ resource "aws_iam_role_policy_attachment" "victim_policy_attachment" {
 }
 
 resource "aws_iam_role" "cloudtrail_role" {
-  name = "OpensearchCloudTrailRole"
+  name = "ElasticCloudTrailRole"
   path = "/"
 
   assume_role_policy = jsonencode({
@@ -205,7 +205,7 @@ resource "aws_iam_role" "cloudtrail_role" {
 }
 
 resource "aws_iam_policy" "cloudtrail_policy" {
-  name        = "OpensearchCloudTrailCloudWatchPolicy"
+  name        = "ElasticCloudTrailCloudWatchPolicy"
   path        = "/"
   description = "Allow CloudTrail to write to CloudWatch"
   policy = jsonencode({
@@ -215,13 +215,13 @@ resource "aws_iam_policy" "cloudtrail_policy" {
         Sid      = "AWSCloudTrailCreateLogStream"
         Effect   = "Allow"
         Action   = "logs:CreateLogStream"
-        Resource = "${aws_cloudwatch_log_group.os_cloudtrail.arn}:log-stream:${data.aws_caller_identity.current.account_id}_CloudTrail_${var.aws_region}*"
+        Resource = "${aws_cloudwatch_log_group.el_cloudtrail.arn}:log-stream:${data.aws_caller_identity.current.account_id}_CloudTrail_${var.aws_region}*"
       },
       {
         Sid      = "AWSCloudTrailPutLogEvents"
         Effect   = "Allow"
         Action   = "logs:PutLogEvents"
-        Resource = "${aws_cloudwatch_log_group.os_cloudtrail.arn}:log-stream:${data.aws_caller_identity.current.account_id}_CloudTrail_${var.aws_region}*"
+        Resource = "${aws_cloudwatch_log_group.el_cloudtrail.arn}:log-stream:${data.aws_caller_identity.current.account_id}_CloudTrail_${var.aws_region}*"
       }
     ]
   })
@@ -233,7 +233,7 @@ resource "aws_iam_role_policy_attachment" "cloudtrail_policy_attachment" {
 }
 
 resource "aws_iam_role" "cloudwatch_role" {
-  name = "OpensearchCloudWatchRole"
+  name = "ElasticCloudWatchRole"
   path = "/"
 
   assume_role_policy = jsonencode({
@@ -257,7 +257,7 @@ resource "aws_iam_role" "cloudwatch_role" {
 }
 
 resource "aws_iam_policy" "cloudwatch_policy" {
-  name        = "OpensearchCloudWatchKinesisPolicy"
+  name        = "ElasticCloudWatchKinesisPolicy"
   path        = "/"
   description = "Allow CloudWatch to write to Kinesis"
   policy = jsonencode({
@@ -269,7 +269,7 @@ resource "aws_iam_policy" "cloudwatch_policy" {
         Action = [
           "kinesis:PutRecord"
         ]
-        Resource = "${aws_kinesis_stream.os_kinesis_stream.arn}"
+        Resource = "${aws_kinesis_stream.el_kinesis_stream.arn}"
       }
     ]
   })

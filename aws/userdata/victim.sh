@@ -42,13 +42,13 @@ cat << 'EOF' > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
         "collect_list": [
           {
             "file_path": "/var/log/httpd/access_log",
-            "log_group_name": "opensearch/apache-access-log",
+            "log_group_name": "elastic/apache-access-log",
             "log_stream_name": "{instance_id}",
             "retention_in_days": 7
           },
           {
             "file_path": "/var/log/messages",
-            "log_group_name": "opensearch/syslog",
+            "log_group_name": "elastic/syslog",
             "log_stream_name": "{instance_id}",
             "retention_in_days": 7
           }
