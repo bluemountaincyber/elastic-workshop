@@ -1,11 +1,13 @@
 #!/bin/bash
 
 # Install docker and docker-compose
-yum update -y
-yum install docker -y
-wget https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -O /usr/local/bin/docker-compose
-chmod +x /usr/local/bin/docker-compose
-usermod -aG docker ec2-user
+apt update
+apt-get install ca-certificates curl gnupg lsb-release -y
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+apt update
+apt install docker-ce docker-ce-cli containerd.io docker-compose-plugin docker-compose -y
+usermod -aG docker elastic
 systemctl enable docker
 systemctl start docker
 
@@ -13,13 +15,9 @@ systemctl start docker
 echo "vm.max_map_count=262144" >> /etc/sysctl.conf
 sysctl -p
 
-# Get host URL
-TOKEN=$(curl -s -X PUT "http://169.254.169.254/latest/api/token" -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-URL=$(curl -s -H "X-aws-ec2-metadata-token: $$TOKEN" http://169.254.169.254/latest/meta-data/public-hostname)
-
 # Create .env file
-mkdir /home/ec2-user/elastic
-cat << EOF > /home/ec2-user/elastic/.env
+mkdir /home/elastic/elastic
+cat << EOF > /home/elastic/elastic/.env
 ELASTIC_PASSWORD=${PASSWORD}
 KIBANA_PASSWORD=${PASSWORD}
 STACK_VERSION=8.1.3
@@ -28,11 +26,11 @@ LICENSE=basic
 ES_PORT=9200
 KIBANA_PORT=5601
 MEM_LIMIT=1073741824
-KIBANA_URL=http://$$URL
+KIBANA_URL=http://${URL}
 EOF
 
 # Create docker-compose.yml
-cat << 'EOF' > /home/ec2-user/elastic/docker-compose.yml
+cat << 'EOF' > /home/elastic/elastic/docker-compose.yml
 version: "2.2"
 
 services:
@@ -210,8 +208,8 @@ services:
     environment:
       LS_JAVA_OPTS: "-Xmx256m -Xms256m"
     volumes:
-      - /home/ec2-user/elastic/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
-      - /home/ec2-user/elastic/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - /home/elastic/elastic/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - /home/elastic/elastic/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
 
 volumes:
   certs:
@@ -225,8 +223,8 @@ volumes:
 EOF
 
 # Create Logstash configuration
-mkdir /home/ec2-user/elastic/logstash
-cat << 'EOF' > /home/ec2-user/elastic/logstash/logstash.yml
+mkdir /home/elastic/elastic/logstash
+cat << 'EOF' > /home/elastic/elastic/logstash/logstash.yml
 config:
   reload:
     automatic: true
@@ -234,58 +232,36 @@ config:
 EOF
 
 # Create Logstash pipeline
-cat << 'EOF' > /home/ec2-user/elastic/logstash/logstash.conf
+cat << 'EOF' > /home/elastic/elastic/logstash/logstash.conf
 input {
-  kinesis {
-    kinesis_stream_name => "AWS_Logs"
-    region => "${REGION}"
-    codec => cloudwatch_logs
-  }
+  azure_event_hubs {
+      event_hub_connections => ["${CONNSTRING}"]
+      threads => 8
+      decorate_events => true
+      consumer_group => "logstash"
+   }
 }
 
 filter {
-  if [logGroup] == "elastic/syslog" {
-    grok {
-      match => { "message" => "%%{SYSLOGBASE}" }
-    }
-    date {
-      timezone => "Etc/UTC"
-      match => ["timestamp", "MMM dd HH:mm:ss", "MMM d HH:mm:ss"]
-      target => "@timestamp"
-    }
-    mutate {
-      remove_field => [ "messageType", "subscriptionFilters", "timestamp" ]
-    }
+  json {
+    source => "message"
   }
-
-  if [logGroup] == "elastic/apache-access-log" {
-    grok {
-      match => { "message" => "%%{COMBINEDAPACHELOG}" }
-    }
-    date {
-      timezone => "Etc/UTC"
-      match => ["timestamp", "dd/MMM/yyyy:HH:mm:ss +0000"]
-      target => "@timestamp"
-    }
-    mutate {
-      remove_field => [ "messageType", "subscriptionFilters", "timestamp" ]
-    }
-  }
-
-  if [logGroup] == "elastic/cloudtrail" {
-    json {
-      source => "message"
-    }
-    mutate {
-      remove_field => [ "apiVersion", "messageType", "subscriptionFilters" ]
-    }
+  ruby {
+    code => "
+      if (event.get('records'))
+        event.get('records')[0].each {|k, v|
+          event.set(k, v);
+        }
+        event.remove('records');
+      end
+    "
   }
 }
 
 output {
   elasticsearch {
      hosts => ["https://es01:9200"]
-     index => "awslogs-%%{+YYYY.MM.dd}"
+     index => "azurelogs-%%{+YYYY.MM.dd}"
      user => "elastic"
      password => "${PASSWORD}"
      ssl => true
@@ -295,19 +271,17 @@ output {
 EOF
 
 # Create Logstash Dockerfile
-cat << 'EOF' > /home/ec2-user/elastic/logstash/Dockerfile
+cat << 'EOF' > /home/elastic/elastic/logstash/Dockerfile
 FROM docker.elastic.co/logstash/logstash:8.1.3
 RUN rm -f /usr/share/logstash/pipeline/logstash.conf && \
-  bin/logstash-plugin install logstash-input-kinesis && \
-  bin/logstash-plugin install logstash-codec-cloudwatch_logs
+  bin/logstash-plugin install logstash-input-azure_event_hubs
 EOF
 
 # Adjust permissions
-chown -R ec2-user:ec2-user /home/ec2-user
+chown -R elastic:elastic /home/elastic
 
-# Start up Elastic
-sudo -u ec2-user -i /usr/local/bin/docker-compose -f /home/ec2-user/elastic/docker-compose.yml --env-file /home/ec2-user/elastic/.env up -d
-until curl -sku 'elastic:${PASSWORD}' https://localhost:9200/_cat/indices | grep awslogs; do
+sudo -u elastic -i /usr/bin/docker-compose -f /home/elastic/elastic/docker-compose.yml  --env-file /home/elastic/elastic/.env up -d
+until curl -sku 'elastic:${PASSWORD}' https://localhost:9200/_cat/indices | grep azurelogs; do
   sleep 10
 done
-curl -X POST -u 'elastic:${PASSWORD}' http://localhost:5601/api/saved_objects/index-pattern -d '{"attributes":{"fieldAttrs":"{}","title":"awslogs-*","timeFieldName":"@timestamp","fields":"[]","typeMeta":"{}","runtimeFieldMap":"{}"}}' -H 'kbn-version: 8.1.3' -H 'Content-Type: application/json'
+curl -X POST -u 'elastic:${PASSWORD}' http://localhost:5601/api/saved_objects/index-pattern -d '{"attributes":{"fieldAttrs":"{}","title":"azurelogs-*","timeFieldName":"@timestamp","fields":"[]","typeMeta":"{}","runtimeFieldMap":"{}"}}' -H 'kbn-version: 8.1.3' -H 'Content-Type: application/json'

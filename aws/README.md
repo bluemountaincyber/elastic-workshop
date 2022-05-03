@@ -29,7 +29,7 @@ terraform init
 terraform apply -auto-approve -var="aws_region=$AWS_DEFAULT_REGION" -var="elastic_password=SuperStrongPassword"
 ```
 
-Output will provide the URL of the OpenSearch Dashboards. After deployment completes, it still takes roughly 5 minutes until you can access the OpenSearch Dashboards app.
+Output will provide the URL of Kibana. After deployment completes, it still takes roughly 5 minutes until you can access the Kibana app.
 
 Default credentials for Kibana are as follows (unless you changed it during deployment... which is HIGHLY recommended):
 
@@ -40,7 +40,7 @@ Default credentials for Kibana are as follows (unless you changed it during depl
 ## Teardown
 
 ```bash
-cd /home/cloudshell-user/opensearch-workshop/aws
+cd /home/cloudshell-user/elastic-workshop/aws
 terraform destroy -auto-approve -var="aws_region=$AWS_DEFAULT_REGION"
 aws dynamodb delete-table --table-name logstash --region $AWS_DEFAULT_REGION
 ```
