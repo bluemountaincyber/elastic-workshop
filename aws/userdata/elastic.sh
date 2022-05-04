@@ -250,7 +250,7 @@ filter {
     }
     date {
       timezone => "Etc/UTC"
-      match => ["timestamp", "MMM dd HH:mm:ss", "MMM d HH:mm:ss"]
+      match => ["message", "MMM dd HH:mm:ss", "MMM d HH:mm:ss"]
       target => "@timestamp"
     }
     mutate {
@@ -275,6 +275,11 @@ filter {
   if [logGroup] == "elastic/cloudtrail" {
     json {
       source => "message"
+    }
+    date {
+      timezone => "Etc/UTC"
+      match => ["timestamp", "MMM d, yyyy @ HH:mm:ss.SSS", "MMM dd, yyyy @ HH:mm:ss.SSS"]
+      target => "@timestamp"
     }
     mutate {
       remove_field => [ "apiVersion", "messageType", "subscriptionFilters" ]
