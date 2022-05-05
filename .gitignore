@@ -2,3 +2,4 @@
 **/.terraform*
 aws/sensitive.txt
 aws/lambda_code.zip
+**/.DS_Store
