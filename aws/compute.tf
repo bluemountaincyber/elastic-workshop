@@ -15,9 +15,10 @@ resource "aws_instance" "elastic" {
   iam_instance_profile        = aws_iam_instance_profile.el_profile.id
   vpc_security_group_ids      = [aws_security_group.el_http.id]
   subnet_id                   = data.aws_subnet.selected.id
-  user_data = templatefile(
-    "${path.module}/userdata/elastic.sh",
-  { REGION = var.aws_region, PASSWORD = var.elastic_password })
+  user_data = templatefile("${path.module}/userdata/elastic.sh",
+  { 
+    REGION = var.aws_region, PASSWORD = var.elastic_password 
+  })
 
   root_block_device {
     volume_size = 20
@@ -46,7 +47,11 @@ resource "aws_instance" "victim" {
   iam_instance_profile        = aws_iam_instance_profile.victim_profile.id
   vpc_security_group_ids      = [aws_security_group.victim_http.id]
   subnet_id                   = data.aws_subnet.selected.id
-  user_data                   = file("${path.module}/userdata/victim.sh")
+  user_data                   = templatefile("${path.module}/userdata/victim.sh",
+  {
+    EVIDENCEBUCKET = aws_s3_bucket.el_evidence.id,
+    REGION = var.aws_region
+  })
 
   root_block_device {
     volume_size = 8

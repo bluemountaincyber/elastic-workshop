@@ -3,7 +3,7 @@
 # Install web services
 yum update -y
 amazon-linux-extras enable php7.4
-yum install httpd php amazon-cloudwatch-agent -y
+yum install httpd php php-mbstring php-xml amazon-cloudwatch-agent -y
 wget https://docs.aws.amazon.com/aws-sdk-php/v3/download/aws.zip -O /tmp/aws.zip
 mkdir /var/www/html/aws-sdk
 unzip -d /var/www/html/aws-sdk /tmp/aws.zip
@@ -36,18 +36,80 @@ EOF
 cat << 'EOF' > /var/www/html/proof.php
 <html>
 <head>
-<title>Evidence Upload</title>
-</head>
-<body>
-<h1>Evidence Upload</h1>
-<form action="proof.php" method="post" enctype="multipart/form-data">
-  Select image to upload:
-  <input type="file" name="fileToUpload" id="fileToUpload">
-  <input type="submit" value="Upload Image" name="submit">
-</form>
+  <title>Evidence Upload</title>
+  <style>
+    table, th, td {  
+      border: 1px solid black;  
+      border-collapse: collapse;
+    }
+  </style>
+  </head>
+  <body>
+    <h1>Evidence Upload</h1>
+    <form action="proof.php" method="post" enctype="multipart/form-data">  Select image to upload:
+    <input type="file" name="fileToUpload" id="fileToUpload">  
+    <input type="submit" value="Upload Image" name="submit">
+    </form>
+  <table>
+    <tr>
+      <th>File Name</th>
+      <th>MD5 Hash</th>    
+      <th>SHA1 Hash</th>    
+      <th>SHA256 Hash</th>  
+    </tr>
 
 <?php
-require '/var/www/html/aws-sdk/aws-autoloader.php'
+require '/var/www/html/aws-sdk/aws-autoloader.php';
+use Aws\S3\S3Client;use Aws\Exception\AwsException;
+$s3Client = new S3Client([
+    'region' => '${REGION}',
+    'version' => '2006-03-01'
+]);
+// Get S3 data and add to table
+$result = $s3Client->listObjects([
+  'Bucket' => '${EVIDENCEBUCKET}'
+]);
+foreach ($result->get("Contents") as $object) {
+  $objectKey = $object["Key"];
+  echo "<tr><td>$objectKey</td>";
+
+  // Get MD5 Hash
+  $result = $s3Client->getObjectTagging([
+    'Bucket' => '${EVIDENCEBUCKET}',
+    'Key' => $objectKey
+  ]);
+  foreach ($result->get("TagSet") as $tag) {
+    if ($tag["Key"] == "MD5HASH") {
+      $md5Hash = $tag["Value"];
+    }
+    if ($tag["Key"] == "SHA1HASH") {
+      $sha1Hash = $tag["Value"];
+    }
+    if ($tag["Key"] == "SHA256HASH") {
+      $sha256Hash = $tag["Value"];
+    }
+  }
+  echo "<td>$md5Hash</td>";
+  echo "<td>$sha1Hash</td>";
+  echo "<td>$sha256Hash</td></tr>";
+}
+echo "</table>";
+if(isset($_POST["submit"])) {
+
+  $result = $s3Client->putObject([
+    'Bucket' => '${EVIDENCEBUCKET}',
+    'Key' => $_FILES["fileToUpload"]["name"],
+    'Body' => file_get_contents($_FILES["fileToUpload"]["tmp_name"])
+  ]);
+
+  if ($result) {
+    $output = "The file ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). " has been uploaded.";
+  } else {
+    $output = "Sorry, there was an error uploading your file.";
+  }
+  sleep(10);
+  header("Refresh:0");
+}
 ?>
 
 </body>

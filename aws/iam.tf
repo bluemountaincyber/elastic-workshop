@@ -136,9 +136,14 @@ resource "aws_iam_policy" "victim_policy" {
         Effect   = "Allow"
         Action   = [
           "s3:GetObject",
-          "s3:PutObjectTagging"
+          "s3:PutObjectTagging",
+          "s3:PutObject",
+          "s3:GetObjectTagging"
         ]
-        Resource = "${aws_s3_bucket.sensitive.arn}/*"
+        Resource = [
+          "${aws_s3_bucket.sensitive.arn}/*",
+          "${aws_s3_bucket.el_evidence.arn}/*"
+        ]
       },
       {
         Sid    = "CloudWatchReadWrite"
