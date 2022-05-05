@@ -279,3 +279,71 @@ resource "aws_iam_role_policy_attachment" "cloudwatch_policy_attachment" {
   role       = aws_iam_role.cloudwatch_role.name
   policy_arn = aws_iam_policy.cloudwatch_policy.arn
 }
+
+resource "aws_iam_role" "el_lambda" {
+  name = "ElasticLambdaRole"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_policy" "el_lambda_policy" {
+  name        = "ElasticLambdaPolicy"
+  path        = "/"
+  description = "Allow CloudWatch to write to Kinesis"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "CreateCloudWatchLogGroup"
+        Effect = "Allow"
+        Action = "logs:CreateLogGroup"
+        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"
+      },
+      {
+        Sid    = "WriteCloudWatchEvents"
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutEventLogs"
+        ]
+        Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/${aws_lambda_function.el_function.function_name}:*"
+      },
+      {
+        Sid    = "AddS3ObjectTags"
+        Effect = "Allow"
+        Action = [
+          "s3:GetObject",
+          "s3:PutObjectTagging"
+        ]
+        Resource = "arn:aws:s3:::${aws_s3_bucket.el_evidence.id}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_policy_attachment" {
+  role       = aws_iam_role.el_lambda.name
+  policy_arn = aws_iam_policy.el_lambda_policy.arn
+}
+
+resource "aws_lambda_permission" "el_s3_lambda" {
+  statement_id  = "AllowExecutionFromS3Bucket"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.el_function.arn
+  principal     = "s3.amazonaws.com"
+  source_arn    = aws_s3_bucket.el_evidence.arn
+}

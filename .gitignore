@@ -1,3 +1,4 @@
 **/terraform*
 **/.terraform*
 aws/sensitive.txt
+aws/lambda_code.zip

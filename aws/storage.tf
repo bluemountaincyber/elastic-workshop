@@ -52,6 +52,23 @@ resource "aws_s3_bucket_policy" "el_cloudtrail" {
   })
 }
 
+resource "aws_s3_bucket" "el_evidence" {
+  bucket        = "el-evidence-${random_string.suffix.result}"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_notification" "lambda_notification" {
+  bucket = aws_s3_bucket.el_evidence.id
+
+  lambda_function {
+    lambda_function_arn = aws_lambda_function.el_function.arn
+    events              = ["s3:ObjectCreated:*"]
+  }
+  depends_on = [
+    aws_lambda_permission.el_s3_lambda
+  ]
+}
+
 module "shell_execute" {
   source               = "github.com/matti/terraform-shell-resource"
   command_when_destroy = "aws dynamodb delete-table --table-name logstash --region ${var.aws_region} --profile ${var.aws_profile} 2>/dev/null || exit 0"
