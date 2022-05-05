@@ -71,7 +71,7 @@ resource "aws_instance" "victim" {
 data "archive_file" "lambda_code" {
   type = "zip"
   source {
-    content = <<EOF
+    content  = <<EOF
 import subprocess
 import boto3
 #import json
@@ -132,11 +132,11 @@ EOF
 
 
 resource "aws_lambda_function" "el_function" {
-  filename = "${path.module}/lambda_function.zip"
+  filename      = "${path.module}/lambda_function.zip"
   function_name = "hashevidence"
-  role = aws_iam_role.el_lambda.arn
-  handler = "lambda_function.lambda_handler"
-  runtime = "python3.8"
+  role          = aws_iam_role.el_lambda.arn
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.8"
   depends_on = [
     data.archive_file.lambda_code
   ]

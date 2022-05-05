@@ -308,9 +308,9 @@ resource "aws_iam_policy" "el_lambda_policy" {
     Version = "2012-10-17"
     Statement = [
       {
-        Sid    = "CreateCloudWatchLogGroup"
-        Effect = "Allow"
-        Action = "logs:CreateLogGroup"
+        Sid      = "CreateCloudWatchLogGroup"
+        Effect   = "Allow"
+        Action   = "logs:CreateLogGroup"
         Resource = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:*"
       },
       {
