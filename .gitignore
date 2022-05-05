@@ -1,5 +1,5 @@
 **/terraform*
 **/.terraform*
-aws/sensitive.txt
-aws/lambda_code.zip
+**/sensitive.txt
+**/*.zip
 **/.DS_Store

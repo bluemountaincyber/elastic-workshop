@@ -132,9 +132,12 @@ resource "aws_iam_policy" "victim_policy" {
         Resource = "*"
       },
       {
-        Sid      = "S3GetObject"
+        Sid      = "S3GetObjectAndTag"
         Effect   = "Allow"
-        Action   = "s3:GetObject"
+        Action   = [
+          "s3:GetObject",
+          "s3:PutObjectTagging"
+        ]
         Resource = "${aws_s3_bucket.sensitive.arn}/*"
       },
       {

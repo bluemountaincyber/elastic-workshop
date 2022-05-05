@@ -2,17 +2,21 @@
 
 # Install web services
 yum update -y
+amazon-linux-extras enable php7.4
 yum install httpd php amazon-cloudwatch-agent -y
+wget https://docs.aws.amazon.com/aws-sdk-php/v3/download/aws.zip -O /tmp/aws.zip
+mkdir /var/www/html/aws-sdk
+unzip -d /var/www/html/aws-sdk /tmp/aws.zip
 
 # Write web content
-cat << 'EOF' > /var/www/html/index.php
+cat << 'EOF' > /var/www/html/view-source.php
 <html>
 <head>
   <title>View Source</title>
 </head>
 <body>
 <h1>View Source</h1>
-<form action="/index.php" method="get">
+<form action="/view-source.php" method="get">
   <label for="url">URL:</label>
   <input type="text" id="url" name="url"><br><br>
   <input type="submit" value="Submit">
@@ -25,6 +29,27 @@ if (!empty($_GET["url"])) {
   echo "</pre>";
 }
 ?>
+</body>
+</html>
+EOF
+
+cat << 'EOF' > /var/www/html/proof.php
+<html>
+<head>
+<title>Evidence Upload</title>
+</head>
+<body>
+<h1>Evidence Upload</h1>
+<form action="proof.php" method="post" enctype="multipart/form-data">
+  Select image to upload:
+  <input type="file" name="fileToUpload" id="fileToUpload">
+  <input type="submit" value="Upload Image" name="submit">
+</form>
+
+<?php
+require '/var/www/html/aws-sdk/aws-autoloader.php'
+?>
+
 </body>
 </html>
 EOF
