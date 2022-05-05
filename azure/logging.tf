@@ -42,32 +42,32 @@ resource "azurerm_eventhub_consumer_group" "logstash" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "activity_log" {
-    name                           = "el-activitylog"
-    target_resource_id             = data.azurerm_subscription.current.id
-    eventhub_name                  = azurerm_eventhub.elastic_hub.name
-    eventhub_authorization_rule_id = azurerm_eventhub_namespace_authorization_rule.auth_rule.id
+  name                           = "el-activitylog"
+  target_resource_id             = data.azurerm_subscription.current.id
+  eventhub_name                  = azurerm_eventhub.elastic_hub.name
+  eventhub_authorization_rule_id = azurerm_eventhub_namespace_authorization_rule.auth_rule.id
 
-    log {
-        category = "Administrative"
-        retention_policy {
-            enabled = true
-            days    = 1
-        }
+  log {
+    category = "Administrative"
+    retention_policy {
+      enabled = true
+      days    = 1
     }
+  }
 
-    log {
-        category = "Security"
-        retention_policy {
-            enabled = true
-            days    = 1
-        }
+  log {
+    category = "Security"
+    retention_policy {
+      enabled = true
+      days    = 1
     }
+  }
 
-    log {
-        category = "Alert"
-        retention_policy {
-            enabled = true
-            days    = 1
-        }
+  log {
+    category = "Alert"
+    retention_policy {
+      enabled = true
+      days    = 1
     }
+  }
 }

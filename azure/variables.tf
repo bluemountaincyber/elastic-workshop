@@ -15,7 +15,7 @@ variable "elastic_app_password" {
 }
 
 variable "elastic_vm_password" {
-  type = string
+  type    = string
   default = "C1oud$ecurity"
   validation {
     condition     = can(regex("\\W", var.elastic_vm_password))
@@ -40,7 +40,7 @@ variable "elastic_vm_password" {
 }
 
 variable "victim_vm_password" {
-  type = string
+  type    = string
   default = "C1oud$ecurity"
   validation {
     condition     = can(regex("\\W", var.victim_vm_password))

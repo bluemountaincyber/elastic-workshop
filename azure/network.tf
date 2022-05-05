@@ -25,7 +25,7 @@ resource "azurerm_public_ip" "el_pip" {
   resource_group_name = azurerm_resource_group.el_rg.name
   location            = azurerm_resource_group.el_rg.location
   allocation_method   = "Static"
-  domain_name_label = "elastic${random_string.suffix.result}"
+  domain_name_label   = "elastic${random_string.suffix.result}"
 }
 
 resource "azurerm_public_ip" "victim_pip" {
