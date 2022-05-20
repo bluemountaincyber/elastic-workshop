@@ -38,6 +38,10 @@ resource "aws_cloudwatch_log_group" "el_victim_syslog" {
   name = "elastic/syslog"
 }
 
+resource "aws_cloudwatch_log_group" "el_lambda" {
+  name = "/aws/lambda/hashevidence"
+}
+
 resource "aws_cloudwatch_log_subscription_filter" "el_cloudtrail_logfilter" {
   name            = "el-cloudtrail-filter"
   role_arn        = aws_iam_role.cloudwatch_role.arn
@@ -60,6 +64,15 @@ resource "aws_cloudwatch_log_subscription_filter" "el_syslog_logfilter" {
   name            = "el-syslog-filter"
   role_arn        = aws_iam_role.cloudwatch_role.arn
   log_group_name  = aws_cloudwatch_log_group.el_victim_syslog.name
+  filter_pattern  = ""
+  destination_arn = aws_kinesis_stream.el_kinesis_stream.arn
+  distribution    = "Random"
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "el_lambda_logfilter" {
+  name            = "el-lambda-filter"
+  role_arn        = aws_iam_role.cloudwatch_role.arn
+  log_group_name  = aws_cloudwatch_log_group.el_lambda.name
   filter_pattern  = ""
   destination_arn = aws_kinesis_stream.el_kinesis_stream.arn
   distribution    = "Random"

@@ -1,9 +1,3 @@
-variable "aws_profile" {
-  type        = string
-  default     = "default"
-  description = "The AWS credential profile to use."
-}
-
 variable "aws_region" {
   type        = string
   default     = "us-east-2"
