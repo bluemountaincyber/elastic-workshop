@@ -71,5 +71,5 @@ resource "aws_s3_bucket_notification" "lambda_notification" {
 
 module "shell_execute" {
   source               = "github.com/matti/terraform-shell-resource"
-  command_when_destroy = "aws dynamodb delete-table --table-name logstash --region ${var.aws_region} --profile ${var.aws_profile} 2>/dev/null || exit 0"
+  command_when_destroy = "aws dynamodb delete-table --table-name logstash --region ${var.aws_region} 2>/dev/null || exit 0"
 }
