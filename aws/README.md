@@ -42,5 +42,4 @@ Default credentials for Kibana are as follows (unless you changed it during depl
 ```bash
 cd /home/cloudshell-user/elastic-workshop/aws
 terraform destroy -auto-approve -var="aws_region=$AWS_DEFAULT_REGION"
-aws dynamodb delete-table --table-name logstash --region $AWS_DEFAULT_REGION
 ```
