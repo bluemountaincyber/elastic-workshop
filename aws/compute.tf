@@ -86,6 +86,7 @@ resource "aws_lambda_function" "el_function" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   depends_on = [
-    data.archive_file.lambda_code
+    data.archive_file.lambda_code,
+    aws_cloudwatch_log_group.el_lambda
   ]
 }
